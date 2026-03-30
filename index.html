@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tosl rapid - قائمة المنتجات المختارة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; scroll-behavior: smooth; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #side-cart { transition: transform 0.3s ease-in-out; }
+        .cart-open { transform: translateX(0) !important; }
+        
+        .product-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .product-image-wrapper {
+            position: relative;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            background: #f8fafc;
+        }
+        .product-image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .password-input-wrapper { position: relative; }
+        .password-input-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Header -->
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 px-4 py-4 border-b">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showTab('store')">
+                <div class="bg-emerald-600 p-2 rounded-xl text-white shadow-lg">
+                    <i class="fas fa-bolt text-xl"></i>
+                </div>
+                <span class="text-2xl font-black text-slate-900">Tosl <span class="text-emerald-600">rapid</span></span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="openPassModal()" class="relative p-3 bg-slate-100 rounded-full text-slate-600 hover:bg-emerald-50 transition">
+                    <i class="fas fa-envelope text-lg"></i>
+                    <span id="red-dot" class="hidden absolute -top-1 -right-1 bg-red-600 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center text-[10px] text-white font-bold animate-pulse">!</span>
+                </button>
+                <button onclick="toggleCart(true)" class="relative p-3 bg-emerald-50 rounded-full text-emerald-600 font-bold hover:bg-emerald-100 transition">
+                    <i class="fas fa-shopping-basket text-lg"></i>
+                    <span id="cart-count" class="absolute -top-1 -left-1 bg-emerald-600 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center border-2 border-white">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Store Tab -->
+    <div id="store-tab" class="tab-content active max-w-7xl mx-auto px-4 py-10">
+        <header class="mb-12 text-right">
+            <h1 class="text-4xl font-black text-slate-900 mb-3">المنتجات المختارة</h1>
+            <p class="text-slate-500 text-lg">نعرض لكم أفضل 7 منتجات متوفرة حالياً في متجرنا.</p>
+        </header>
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></div>
+    </div>
+
+    <!-- Admin Panel Tab -->
+    <div id="admin-tab" class="tab-content max-w-5xl mx-auto px-4 py-10">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-black text-slate-900">لوحة التحكم والطلبات</h2>
+            <button onclick="showTab('store')" class="bg-slate-200 px-6 py-2 rounded-xl font-bold hover:bg-slate-300 transition">خروج</button>
+        </div>
+        <div id="orders-list" class="space-y-6"></div>
+    </div>
+
+    <!-- Secure Password Modal -->
+    <div id="pass-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-sm p-10 shadow-2xl text-right">
+            <div class="text-center mb-8">
+                <div class="bg-emerald-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 text-3xl">
+                    <i class="fas fa-key"></i>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900">التحقق من الهوية</h3>
+                <p class="text-slate-500 text-sm mt-2">يرجى إدخال كلمة السر الخاصة بالمدير</p>
+            </div>
+            <div class="space-y-4">
+                <div class="password-input-wrapper">
+                    <input type="password" id="admin-password-input" placeholder="كلمة السر" class="w-full p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none text-center text-lg font-bold focus:border-emerald-500 transition-all">
+                    <i class="fas fa-eye" id="toggle-pass-eye" onclick="togglePassVisibility()"></i>
+                </div>
+                <button onclick="checkPassword()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-lg hover:bg-emerald-700 transition active:scale-95">دخول</button>
+                <button onclick="closePassModal()" class="w-full text-slate-400 py-1 font-bold text-sm">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cart-overlay" onclick="toggleCart(false)" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden"></div>
+    <div id="side-cart" class="fixed top-0 right-0 h-full w-full max-w-xs bg-white z-[70] shadow-2xl translate-x-full flex flex-col text-right">
+        <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+            <h3 class="text-xl font-black">سلة التسوق</h3>
+            <button onclick="toggleCart(false)" class="text-slate-300 text-4xl">&times;</button>
+        </div>
+        <div id="cart-items-list" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+        <div id="cart-checkout" class="p-6 border-t bg-white hidden">
+            <div class="flex justify-between font-black text-xl mb-6"><span>المجموع:</span><span id="subtotal-display">0 دج</span></div>
+            <button onclick="openCheckout()" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl hover:bg-emerald-700 transition">إتمام الطلب</button>
+        </div>
+    </div>
+
+    <!-- Order Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl text-right">
+            <h3 class="text-3xl font-black mb-6">تأكيد طلبك</h3>
+            <form id="order-form" onsubmit="handleFinalOrder(event)" class="space-y-4 text-right">
+                <input type="text" id="cust-name" required placeholder="الاسم الكامل" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-emerald-500">
+                <input type="tel" id="cust-phone" required placeholder="رقم الهاتف" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none focus:border-emerald-500">
+                <select id="cust-wilaya" required onchange="calcTotal()" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none font-bold text-slate-600"></select>
+                <textarea id="cust-address" required placeholder="العنوان بالتفصيل" class="w-full p-4 bg-slate-50 border rounded-2xl outline-none h-20 resize-none"></textarea>
+                <div class="bg-emerald-50 p-5 rounded-3xl border border-emerald-100 flex justify-between font-black text-2xl text-emerald-800">
+                    <span>الإجمالي:</span><span id="total-cost">0 دج</span>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-emerald-700 transition">إرسال الطلبية الآن</button>
+                <button type="button" onclick="document.getElementById('order-modal').classList.add('hidden')" class="w-full text-slate-400 py-2 font-bold">إلغاء</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const SECURE_HASH = "YmFkcmkgYWtyb3VtIDIwMDNB"; // badri akroum 2003A
+        
+        const WILAYAS = ["أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة", "تمنراست", "تبسة", "تلمسان", "تيارت", "تيزي وزو", "الجزائر", "الجلفة", "جيجل", "سطيف", "سعيدة", "سكيكدة", "سيدي بلعباس", "عنابة", "قالمة", "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة", "وهران", "البيض", "إليزي", "برج بوعريريج", "بومرداس", "الطارف", "تندوف", "تسمسيلت", "الوادي", "خنشلة", "سوق أهراس", "تيبازة", "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان"];
+        
+        const SHIP_PRICES = { "الجزائر": 300, "البليدة": 400, "بومرداس": 400, "تيبازة": 400 };
+
+        // 7 منتجات فقط
+        const PRODUCTS = [
+            { id: 1, name: "ساعة ذكية Ultra الإصدار الأخير", price: 6500, image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30" },
+            { id: 2, name: "حذاء رياضي Air Max برو", price: 8900, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff" },
+            { id: 3, name: "نظارات شمسية كلاسيك بولارايزد", price: 3200, image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f" },
+            { id: 4, name: "سماعات بلوتوث Noise Cancelling", price: 4500, image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e" },
+            { id: 5, name: "حقيبة ظهر جلدية فاخرة", price: 5800, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa" },
+            { id: 6, name: "ماكينة حلاقة احترافية 5 في 1", price: 4200, image: "https://images.unsplash.com/photo-1621605815971-fbc98d665033" },
+            { id: 7, name: "مصباح مكتبي ذكي LED", price: 2800, image: "https://images.unsplash.com/photo-1534073828943-f801091bb18c" }
+        ];
+
+        let cart = [];
+        let orders = [];
+
+        window.onload = () => {
+            renderProducts();
+            const select = document.getElementById('cust-wilaya');
+            WILAYAS.forEach(w => {
+                let opt = document.createElement('option'); opt.value = w; opt.textContent = w; select.appendChild(opt);
+            });
+        };
+
+        function renderProducts() {
+            const list = document.getElementById('product-list');
+            list.innerHTML = PRODUCTS.map(p => `
+                <div class="bg-white p-4 rounded-[2.5rem] border border-slate-100 shadow-sm product-card flex flex-col">
+                    <div class="product-image-wrapper mb-5">
+                        <img src="${p.image}?w=600&auto=format&fit=crop" alt="[صورة ${p.name}]">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg mb-2 text-right text-slate-800">${p.name}</h3>
+                            <div class="text-emerald-600 font-black text-2xl mb-6 text-right">${p.price} دج</div>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm hover:bg-emerald-600 transition shadow-lg shadow-slate-100 active:scale-95">
+                           أضف إلى السلة
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function checkPassword() {
+            const input = document.getElementById('admin-password-input').value;
+            if (btoa(unescape(encodeURIComponent(input))) === SECURE_HASH) {
+                closePassModal(); showTab('admin');
+            } else {
+                alert("رمز الدخول غير صحيح.");
+            }
+        }
+
+        function togglePassVisibility() {
+            const input = document.getElementById('admin-password-input');
+            const eye = document.getElementById('toggle-pass-eye');
+            if (input.type === "password") {
+                input.type = "text"; eye.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = "password"; eye.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function addToCart(id) {
+            const p = PRODUCTS.find(x => x.id === id);
+            const item = cart.find(x => x.id === id);
+            if(item) item.qty++; else cart.push({...p, qty: 1});
+            updateCart(); toggleCart(true);
+        }
+
+        function updateCart() {
+            const sub = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            document.getElementById('cart-count').innerText = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('subtotal-display').innerText = sub + " دج";
+            document.getElementById('cart-checkout').classList.toggle('hidden', cart.length === 0);
+            document.getElementById('cart-items-list').innerHTML = cart.map((i, idx) => `
+                <div class="flex gap-4 bg-slate-50 p-4 rounded-3xl border items-center">
+                    <img src="${i.image}" class="w-16 h-16 rounded-2xl object-cover border">
+                    <div class="flex-1 text-right">
+                        <h4 class="font-bold text-sm text-slate-700">${i.name}</h4>
+                        <div class="text-emerald-600 font-black text-sm">${i.price * i.qty} دج</div>
+                    </div>
+                    <button onclick="cart.splice(${idx},1);updateCart();" class="text-red-400 text-2xl px-2 hover:text-red-600 transition">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function toggleCart(open) {
+            document.getElementById('side-cart').classList.toggle('cart-open', open);
+            document.getElementById('cart-overlay').classList.toggle('hidden', !open);
+        }
+
+        function openCheckout() { toggleCart(false); document.getElementById('order-modal').classList.remove('hidden'); calcTotal(); }
+        
+        function closePassModal() { 
+            document.getElementById('pass-modal').classList.add('hidden'); 
+            document.getElementById('admin-password-input').value = ""; 
+        }
+
+        function openPassModal() { document.getElementById('pass-modal').classList.remove('hidden'); }
+
+        function showTab(t) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(t + '-tab').classList.add('active');
+            if(t === 'admin') renderAdminOrders();
+        }
+
+        function calcTotal() {
+            const w = document.getElementById('cust-wilaya').value;
+            const sub = cart.reduce((s, i) => s + (i.price * i.qty), 0);
+            const ship = SHIP_PRICES[w] || 650;
+            document.getElementById('total-cost').innerText = (sub + ship) + " دج";
+        }
+
+        function handleFinalOrder(e) {
+            e.preventDefault();
+            const w = document.getElementById('cust-wilaya').value;
+            const order = {
+                name: document.getElementById('cust-name').value,
+                phone: document.getElementById('cust-phone').value,
+                wilaya: w,
+                address: document.getElementById('cust-address').value,
+                items: cart.map(i => `${i.name} (x${i.qty})`).join('، '),
+                total: parseInt(document.getElementById('total-cost').innerText),
+                time: new Date().toLocaleString('ar-DZ')
+            };
+            orders.unshift(order);
+            document.getElementById('red-dot').classList.remove('hidden');
+            alert("تم إرسال الطلب بنجاح! شكراً لثقتكم.");
+            cart = []; updateCart(); document.getElementById('order-modal').classList.add('hidden');
+            document.getElementById('order-form').reset();
+        }
+
+        function renderAdminOrders() {
+            const container = document.getElementById('orders-list');
+            container.innerHTML = orders.length ? orders.map(o => `
+                <div class="bg-white p-8 rounded-[3rem] border shadow-sm text-right relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-3 h-full bg-emerald-500"></div>
+                    <div class="flex justify-between items-center mb-6 border-b pb-4">
+                        <h4 class="text-2xl font-black text-slate-800">${o.name}</h4>
+                        <span class="bg-slate-100 px-4 py-2 rounded-xl text-xs font-bold text-slate-500">${o.time}</span>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8 text-sm">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3"><i class="fas fa-phone text-emerald-500"></i> <b>الهاتف:</b> ${o.phone}</div>
+                            <div class="flex items-center gap-3"><i class="fas fa-map-marker-alt text-emerald-500"></i> <b>الولاية:</b> ${o.wilaya}</div>
+                            <div class="flex items-center gap-3"><i class="fas fa-home text-emerald-500"></i> <b>العنوان:</b> ${o.address}</div>
+                        </div>
+                        <div class="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl">
+                            <p class="text-xs text-emerald-400 mb-2 font-black uppercase tracking-widest">تفاصيل السلة:</p>
+                            <p class="mb-6 text-base opacity-90">${o.items}</p>
+                            <div class="text-emerald-400 font-black text-2xl pt-4 border-t border-white/10 flex justify-between">
+                                <span>الإجمالي:</span>
+                                <span>${o.total} دج</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-center py-24 text-slate-300 font-black text-xl border-4 border-dashed rounded-[3rem]">لا توجد أي رسائل أو طلبيات حالياً</div>';
+        }
+    </script>
+</body>
+</html>
+
